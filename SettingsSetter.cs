@@ -39,6 +39,7 @@ public class SettingsSetter : MonoBehaviour {
     public float driftMagnitude   = 1f;
     public float neighborCalcFreq = 20f;
     public float centralPull      = 100f;
+    public float neighborPush     = 200f;
 
 
     // Agent Controller variables.
@@ -49,8 +50,32 @@ public class SettingsSetter : MonoBehaviour {
     public bool  speechBubbleOn   = false;
 
 
-    public void Start() {
-        DontDestroyOnLoad(gameObject);
+    public void WriteSettings() {
+        string s = "";
+        s += string.Format("seed, {0}\n", seed);
+        s += string.Format("numberOfVillages, {0}\n"   , numberOfVillages   );
+        s += string.Format("avgVillagePop, {0}\n"      , avgVillagePop      );
+        s += string.Format("populationRange, {0}\n"    , populationRange    );
+        s += string.Format("numVillageNeighbors, {0}\n", numVillageNeighbors);
+        s += string.Format("villageSize, {0}\n"        , villageSize        );
+        s += string.Format("popSizeModifier, {0}\n"    , popSizeModifier    );
+        s += string.Format("avgVillageDistance, {0}\n" , avgVillageDistance );
+        s += string.Format("neighborSearchArea, {0}\n" , neighborSearchArea );
+        s += string.Format("enableLogging, {0}\n"      , enableLogging      );
+        s += string.Format("useNewLine, {0}\n"         , useNewLine         );
+        s += string.Format("timeStep, {0}\n"           , timeStep           );
+        s += string.Format("minWordLength, {0}\n"      , minWordLength      );
+        s += string.Format("maxWordLength, {0}\n"      , maxWordLength      );
+        s += string.Format("driftFreq, {0}\n"          , driftFreq          );
+        s += string.Format("driftMagnitude, {0}\n"     , driftMagnitude     );
+        s += string.Format("neighborCalcFreq, {0}\n"   , neighborCalcFreq   );
+        s += string.Format("centralPull, {0}\n"        , centralPull        );
+        s += string.Format("neighborPush, {0}\n"       , neighborPush       );
+        s += string.Format("speechPlasticity, {0}\n"   , speechPlasticity   );
+        s += string.Format("travelFreq, {0}\n"         , travelFreq         );
+        s += string.Format("travelFreqRange, {0}\n"    , travelFreqRange    );
+        s += string.Format("visitDuration, {0}\n"      , visitDuration      );
+        s += string.Format("speechBubbleOn, {0}\n"     , speechBubbleOn     );
     }
 
 
@@ -75,6 +100,10 @@ public class SettingsSetter : MonoBehaviour {
 
 
     // These setters are necessary so that Unity's default sliders can access them.
+    public void SetSeed(int n) {
+        seed = n;
+    }
+
     public void SetNumberOfVillages(int n) {
         numberOfVillages = n;
     }
@@ -137,6 +166,10 @@ public class SettingsSetter : MonoBehaviour {
 
     public void SetCentralPull(float n) {
         centralPull = n;
+    }
+
+    public void SetNeighborPush(float n) {
+        neighborPush = n;
     }
 
     public void SetSpeechPlasticity(float n) {

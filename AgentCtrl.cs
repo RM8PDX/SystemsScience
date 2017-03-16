@@ -145,7 +145,9 @@ public class AgentCtrl : MonoBehaviour {
 
 
     public List<Phoneme> RndWord() {
-        int rndIdx = Random.Range(1, swadesh.swadishDict.Count);
+        if (swadesh == null)
+            return new List<Phoneme>();
+        int rndIdx = Random.Range(1, swadesh.swadishDict.Count - 1);
         return swadesh.swadishDict.ElementAt(rndIdx).Value;
     }
 

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 
+
 public class VillageCtrl : MonoBehaviour, IQuadTreeObject  {
     public GameObject agentPrefab;
     public int population;
@@ -18,6 +19,9 @@ public class VillageCtrl : MonoBehaviour, IQuadTreeObject  {
     public float driftMagnitude;
     public float centralPull;
     public int neighborsPerVillage;
+    public float keepDist = 100f;
+
+    private Vector3 curVel;
 
     public Vector2 worldPos {
         get {
@@ -26,6 +30,7 @@ public class VillageCtrl : MonoBehaviour, IQuadTreeObject  {
             gameObject.transform.position = new Vector3(value.x, 0f, value.y);
         }
     }
+
 
 
     public void GrabSettings() {
@@ -40,11 +45,13 @@ public class VillageCtrl : MonoBehaviour, IQuadTreeObject  {
 
 
     public void Start() {
+        GrabSettings();
+
         rb = GetComponent<Rigidbody>();
         simCtrl = GetComponent<SimInstantiator>();
         worldMap = FindObjectOfType<SimulationMap>();
         InvokeRepeating("CalcNeighbors", neighborCalcFreq, neighborCalcFreq);
-        InvokeRepeating("Drift", villageNumber, driftFreq);
+        InvokeRepeating("Drift", villageNumber/100f, driftFreq);
 
         Vector3 scale = gameObject.transform.localScale;
         for (int i = 0; i < population; i++) {
@@ -119,11 +126,63 @@ public class VillageCtrl : MonoBehaviour, IQuadTreeObject  {
     }
 
 
+    /// <summary>
+    /// Repell Vector A off of Vector B proportional to the distance, as if
+    /// through magnetic repulsion.
+    /// </summary>
+    /// <param name="A">Position of object being pushed.</param>
+    /// <param name="B">Position of object exerting repelling force.</param>
+    /// <param name="maxValue">Maximum magnitude to get pushed by.</param>
+    public Vector3 GetPush(Vector3 A, Vector3 B, float maxValue = 100f) {
+        Vector3 toA = A - B;
+        return Mathf.Max(maxValue - toA.magnitude, 0f) * toA.normalized;
+    }
+
+
+    /// <summary>
+    /// Pull Vector A towards Vector B as if through a magnetic pull.
+    /// </summary>
+    /// <param name="A">Position of object being pulled.</param>
+    /// <param name="B">Position of object exerting the pulling force.</param>
+    /// <param name="maxValue">Maximum magnitude to get pulled by.</param>
+    public Vector3 GetPull(Vector3 A, Vector3 B, float maxValue = 100f) {
+        return GetPush(B, A, maxValue);
+    }
+
+
+    /// <summary>
+    /// Pull Vector A towards Vector B as if A were attached to a rubber band
+    /// to a fixed point, B.
+    /// </summary>
+    /// <param name="A">Position of object being pulled.</param>
+    /// <param name="B">Position of object exerting the pulling force.</param>
+    /// <param name="maxValue">Maximum magnitude to get pulled by.</param>
+    /// <returns></returns>
+    public Vector3 GetElasticPull(Vector3 A, Vector3 B, float maxValue = 100f) {
+        Vector3 toB = B - A;
+        return Mathf.Min(toB.magnitude, maxValue) * toB.normalized;
+    }
+
+
     public void Drift() {
         Vector3 rnd = new Vector3(Random.Range(-0.9f, 0.9f), 0f, Random.Range(-0.9f, 0.9f));
-        rnd *= driftMagnitude;
-        Vector3 toCenter = -1 * gameObject.transform.position.normalized;
-        rnd += toCenter * centralPull;
-        rb.AddForce(rnd);
+        rnd *= driftMagnitude*10;
+        rnd += GetElasticPull(gameObject.transform.position, Vector3.zero, keepDist/1000f);
+
+        foreach (VillageCtrl village in neighbors) {
+            rnd += GetPush(gameObject.transform.position, village.transform.position, keepDist*2);
+        }
+
+        curVel = rnd;
+    }
+
+
+    public void LateUpdate() {
+        rb.AddForce(curVel);
+
+        // For whatever reason, Unity is REALLY bad at actually doing this on its' own.
+        Vector3 pos = gameObject.transform.position;
+        pos.y = 0f;
+        gameObject.transform.position = pos;
     }
 }

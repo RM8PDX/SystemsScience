@@ -18,14 +18,32 @@ public class SimInstantiator : MonoBehaviour {
     private const int MAX_PLACEMENT_TRIES = 1000;
 
     public GameObject villagePrefab;
+    public GameObject pauseMenu;
 
     protected SimulationMap worldMap;
 
 
+    public void GrabAndSetSettings() {
+        SettingsSetter settings = FindObjectOfType<SettingsSetter>();
+        DontDestroyOnLoad(settings.gameObject);
+        settings.settingsMenu = pauseMenu;
+
+        numVillages         = settings.numberOfVillages;
+        avgPopulation       = settings.avgVillagePop;
+        popRange            = settings.populationRange;
+        villageWidth        = settings.villageSize;
+        villageSizeModifier = settings.popSizeModifier;
+        avgDist             = settings.avgVillageDistance;
+        neighborSearchArea  = settings.neighborSearchArea;
+    }
+
 	void Start () {
+        GrabAndSetSettings();
+
         Time.timeScale = 1f;
-        Random.InitState(seed);
+        Random.InitState((int)seed);
         worldMap = FindObjectOfType<SimulationMap>();  // MakeVillage() needs this to work,
+        Debug.Log(worldMap);
 
         for (int i = 0; i < numVillages; i++)
             MakeVillage();
@@ -42,6 +60,10 @@ public class SimInstantiator : MonoBehaviour {
     /// not some random empty spot with no sense of scale or position.
     /// </summary>
     protected void PlaceCamera() {
+        if (worldMap.villageList.Count == 0) {
+            Invoke("PlaceCamera", 10f);
+            return;
+        }
         VillageCtrl rndVillage = worldMap.villageList[Random.Range(0, worldMap.villageList.Count)];
         Vector3 pos = rndVillage.gameObject.transform.position;
         pos.y = 250;
